@@ -1,0 +1,7 @@
+# Composer cruft
+/vendor/
+
+# Cruft created by build tools
+.php-cs-fixer.cache
+
+
