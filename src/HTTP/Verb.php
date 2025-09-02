@@ -15,14 +15,14 @@ namespace BHR\Router\HTTP;
 /**
  * Legal HTTP request verbs.
  */
-enum Verb
+enum Verb: string
 {
-    case GET;
-    case POST;
-    case PUT;
-    case DELETE;
-    case PATCH;
-    case HEAD;
-    case TRACE;
-    case CONNECT;
+    case GET = 'GET';
+    case POST = 'POST';
+    case PUT = 'PUT';
+    case DELETE = 'DELETE';
+    case PATCH = 'PATCH';
+    case HEAD = 'HEAD';
+    case TRACE = 'TRACE';
+    case CONNECT = 'CONNECT';
 }
