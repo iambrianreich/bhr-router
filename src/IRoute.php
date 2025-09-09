@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file contains BHR\Router\Routes\StringRoute
+ * This file contains BHR\Router\IRoute
  *
  * Copyright $YEAR$$ Brian Reich
  *
@@ -29,28 +29,18 @@
 
 declare(strict_types=1);
 
-namespace BHR\Router\Routes;
-
-use BHR\Router\IRoute;
+namespace BHR\Router;
 
 /**
- * A StringRoute is a single route which matches when the request path is
- * identical to the route string.
+ * An IRoute is a URI path into an application.
  */
-class StringRoute implements IRoute
+interface IRoute
 {
     /**
-     * Creates a new StringRoute.
+     * Returns true if the specified path matches the route.
+     *
+     * @param string $path The path to test.
+     * @return bool Returns true if the route matches the path.
      */
-    public function __construct(private string $route)
-    {
-    }
-
-    /**
-     * Returns true if the path is identical to the route.
-     */
-    public function matches(string $path): bool
-    {
-        return $path === $this->route;
-    }
+    public function matches(string $path): bool;
 }

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file contains BHR\Router\Routes\StringRoute
+ * This file contains Tests\BHR\Router\IRouteTest
  *
  * Copyright $YEAR$$ Brian Reich
  *
@@ -29,28 +29,31 @@
 
 declare(strict_types=1);
 
-namespace BHR\Router\Routes;
+namespace Tests\BHR\Router;
 
 use BHR\Router\IRoute;
+use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
-/**
- * A StringRoute is a single route which matches when the request path is
- * identical to the route string.
- */
-class StringRoute implements IRoute
+class IRouteTest extends TestCase
 {
-    /**
-     * Creates a new StringRoute.
-     */
-    public function __construct(private string $route)
+    public function testInterfaceExists(): void
     {
+        $this->assertTrue(interface_exists(IRoute::class));
     }
 
-    /**
-     * Returns true if the path is identical to the route.
-     */
-    public function matches(string $path): bool
+    public function testInterfaceHasMatchesMethod(): void
     {
-        return $path === $this->route;
+        $reflectionClass = new ReflectionClass(IRoute::class);
+        $this->assertTrue($reflectionClass->hasMethod('matches'));
+
+        $reflectionMethod = $reflectionClass->getMethod('matches');
+        $returnType = $reflectionMethod->getReturnType();
+        $this->assertEquals('bool', (string) $returnType);
+
+        $this->assertEquals(1, $reflectionMethod->getNumberOfParameters());
+        $reflectionParameters = $reflectionMethod->getParameters();
+        $this->assertEquals('path', $reflectionParameters[0]->getName());
+        $this->assertEquals('string', $reflectionParameters[0]->getType());
     }
 }

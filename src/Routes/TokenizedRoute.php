@@ -6,6 +6,7 @@
 
 namespace BHR\Router\Routes;
 
+use BHR\Router\IRoute;
 use InvalidArgumentException;
 
 /**
@@ -19,7 +20,7 @@ use InvalidArgumentException;
  * $route->matches('user/12'); // Returns true
  * $route->getArguments(); // Returns ['id' => 12]
  */
-class TokenizedRoute
+class TokenizedRoute implements IRoute
 {
     public const PATH_SEPARATOR = '/';
     public const ERROR_INVALID_TOKEN = '"%" is an invalid url token';
