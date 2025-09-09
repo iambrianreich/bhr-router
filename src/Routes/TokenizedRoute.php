@@ -6,6 +6,8 @@
 
 namespace BHR\Router\Routes;
 
+use BadMethodCallException;
+use BHR\Router\IParameterizedRoute;
 use BHR\Router\IRoute;
 use InvalidArgumentException;
 
@@ -20,7 +22,7 @@ use InvalidArgumentException;
  * $route->matches('user/12'); // Returns true
  * $route->getArguments(); // Returns ['id' => 12]
  */
-class TokenizedRoute implements IRoute
+class TokenizedRoute implements IParameterizedRoute
 {
     public const PATH_SEPARATOR = '/';
     public const ERROR_INVALID_TOKEN = '"%" is an invalid url token';
@@ -110,15 +112,14 @@ class TokenizedRoute implements IRoute
     }
 
     /**
-     * Returns an array of values in the path that match the arguments
-     * in the TokenizedRoute's path.
-     *
-     * If not called or previous call to matches() was not successful, returns null.
-     *
-     * @return array<string,string>|null Returns a hash of arguments, or null.
+     * @inheritdoc
      */
-    public function getArguments(): ?array
+    public function getParameters(): array
     {
+        if ($this->arguments === null) {
+            throw new BadMethodCallException('matches() not called or last call failed');
+        }
+
         return $this->arguments;
     }
 }

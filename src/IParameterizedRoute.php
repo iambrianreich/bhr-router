@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file contains Tests\BHR\Router\Routes\TokenizedRouteTest
+ * This file contains BHR\Router\IParameterizedRoute
  *
  * Copyright $YEAR$$ Brian Reich
  *
@@ -29,35 +29,21 @@
 
 declare(strict_types=1);
 
-namespace Tests\BHR\Router\Routes;
+namespace BHR\Router;
 
-use BHR\Router\Routes\TokenizedRoute;
-use PHPUnit\Framework\TestCase;
-
-class TokenizedRouteTest extends TestCase
+/**
+ * An IParameterizedRoute is a route that may contain named parameters which
+ * are considered part of the request parameters.
+ */
+interface IParameterizedRoute extends IRoute
 {
-    public function testClassExists(): void
-    {
-        $this->assertTrue(class_exists(TokenizedRoute::class));
-    }
-
-    public function testMatchesFailedIfDifferentNumberOfTokens(): void
-    {
-        $route = TokenizedRoute::fromPath('user/{userId}');
-        $path = 'user/profile/12';
-        $this->assertFalse($route->matches($path));
-    }
-
-    public function testReturnsTrueForExactMatch(): void
-    {
-        $route = TokenizedRoute::fromPath('user/profile');
-        $this->assertTrue($route->matches('user/profile'));
-    }
-
-    public function testReturnsTrueForArgumentMatch(): void
-    {
-        $route = TokenizedRoute::fromPath('user/{id}');
-        $this->assertTrue($route->matches('user/12'));
-        $this->assertEquals('12', $route->getParameters()['id']);
-    }
+    /**
+     * Returns the named parameters from the last successful call to
+     * matches(). If matches() was never called, or the last call to
+     * matches() was false, a BadMethodCallException is thrown.
+     *
+     * @return array<string,string> Returns the most recent parameters.
+     * @throws BadMethodCallException if matches() not called, or last call failed.
+     */
+    public function getParameters(): array;
 }

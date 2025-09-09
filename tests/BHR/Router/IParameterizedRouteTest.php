@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file contains Tests\BHR\Router\Routes\TokenizedRouteTest
+ * This file contains Tests\BHR\Router\IParameterizedRouteTest
  *
  * Copyright $YEAR$$ Brian Reich
  *
@@ -29,35 +29,25 @@
 
 declare(strict_types=1);
 
-namespace Tests\BHR\Router\Routes;
+namespace Tests\BHR\Router;
 
-use BHR\Router\Routes\TokenizedRoute;
+use BHR\Router\IParameterizedRoute;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
-class TokenizedRouteTest extends TestCase
+class IParameterizedRouteTest extends TestCase
 {
-    public function testClassExists(): void
+    public function testInterfaceExists(): void
     {
-        $this->assertTrue(class_exists(TokenizedRoute::class));
+        $this->assertTrue(interface_exists(IParameterizedRoute::class));
     }
 
-    public function testMatchesFailedIfDifferentNumberOfTokens(): void
+    public function testGetParametersMethod(): void
     {
-        $route = TokenizedRoute::fromPath('user/{userId}');
-        $path = 'user/profile/12';
-        $this->assertFalse($route->matches($path));
-    }
-
-    public function testReturnsTrueForExactMatch(): void
-    {
-        $route = TokenizedRoute::fromPath('user/profile');
-        $this->assertTrue($route->matches('user/profile'));
-    }
-
-    public function testReturnsTrueForArgumentMatch(): void
-    {
-        $route = TokenizedRoute::fromPath('user/{id}');
-        $this->assertTrue($route->matches('user/12'));
-        $this->assertEquals('12', $route->getParameters()['id']);
+        $reflectionClass = new ReflectionClass(IParameterizedRoute::class);
+        $this->assertTrue($reflectionClass->hasMethod('getParameters'));
+        $reflectionMethod = $reflectionClass->getMethod('getParameters');
+        $returnType = $reflectionMethod->getReturnType();
+        $this->assertEquals('array', (string) $returnType);
     }
 }
