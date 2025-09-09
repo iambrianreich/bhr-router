@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file contains BHR\Router\Routes\StringRoute
  *
@@ -8,7 +9,7 @@
  * software and associated documentation files (the “Software”), to deal in the
  * Software without restriction, including without limitation the rights to use, copy,
  * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so, subject to the 
+ * and to permit persons to whom the Software is furnished to do so, subject to the
  * following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
@@ -34,17 +35,20 @@ namespace BHR\Router\Routes;
  * A StringRoute is a single route which matches when the request path is
  * identical to the route string.
  */
-class StringRoute {
+class StringRoute
+{
     /**
      * Creates a new StringRoute.
      */
-    public function __construct(private string $route) {
+    public function __construct(private string $route)
+    {
     }
 
     /**
      * Returns true if the path is identical to the route.
      */
-    public function matches(string $path): bool {
+    public function matches(string $path): bool
+    {
         return $path === $this->route;
     }
 }

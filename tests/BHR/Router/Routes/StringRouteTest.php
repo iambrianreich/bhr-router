@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file contains Tests\BHR\Router\Routes\StringRouteTest
  *
@@ -8,7 +9,7 @@
  * software and associated documentation files (the “Software”), to deal in the
  * Software without restriction, including without limitation the rights to use, copy,
  * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so, subject to the 
+ * and to permit persons to whom the Software is furnished to do so, subject to the
  * following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
@@ -33,18 +34,22 @@ namespace Tests\BHR\Router\Routes;
 use BHR\Router\Routes\StringRoute;
 use PHPUnit\Framework\TestCase;
 
-class StringRouteTest extends TestCase {
-    public function testClassExists(): void {
+class StringRouteTest extends TestCase
+{
+    public function testClassExists(): void
+    {
         $this->assertTrue(class_exists(StringRoute::class));
     }
 
-    public function testMatchesReturnsTrueWhenStringsAreEqual(): void {
+    public function testMatchesReturnsTrueWhenStringsAreEqual(): void
+    {
         $path = '/users/12';
         $route = new StringRoute($path);
         $this->assertTrue($route->matches($path));
     }
 
-    public function testMatchesReturnsFalseWhenStringsAreNotEqual(): void {
+    public function testMatchesReturnsFalseWhenStringsAreNotEqual(): void
+    {
         $routePath = '/users/me';
         $route = new StringRoute($routePath);
         $requestPath = '/users/somebodyelse';

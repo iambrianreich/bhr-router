@@ -1,7 +1,9 @@
 <?php
+
 /**
  * This file contains BHR\$CLASS
 */
+
 namespace BHR\Router\Routes;
 
 use InvalidArgumentException;
@@ -10,9 +12,9 @@ use InvalidArgumentException;
  * A TokenizedRoute is a route which may specify named tokens as part of the
  * route. When the route specifies named tokens, the values of the tokens from
  * the most recent call to match() can be retrieved with getArguments().
- * 
+ *
  * Example:
- * 
+ *
  * $route = new TokenizedRoute('user/{id}');
  * $route->matches('user/12'); // Returns true
  * $route->getArguments(); // Returns ['id' => 12]
@@ -34,7 +36,8 @@ class TokenizedRoute
      * @param string[] $tokens The list of tokens for the route.
      * @throws InvalidArgumentException if any array items are not strings.
      */
-    public function __construct(protected array $tokens) {
+    public function __construct(protected array $tokens)
+    {
         foreach ($tokens as $token) {
             if (! is_string($token)) {
                 throw new InvalidArgumentException(sprintf(self::ERROR_INVALID_TOKEN, $token));
@@ -55,7 +58,8 @@ class TokenizedRoute
      * @param string $path The path to convert to a TokenizedRoute.
      * @return self
      */
-    public static function fromPath(string $path): self {
+    public static function fromPath(string $path): self
+    {
         return new TokenizedRoute(explode(self::PATH_SEPARATOR, $path));
     }
 
@@ -78,7 +82,8 @@ class TokenizedRoute
      * @param string $path The path to test
      * @return bool Returns true if the patch matches the TokenizedRoute
      */
-    public function matches(string $path): bool {
+    public function matches(string $path): bool
+    {
         $pathTokens = explode('/', $path);
         $this->arguments = null;
         $arguments = [];
@@ -111,7 +116,8 @@ class TokenizedRoute
      *
      * @return array<string,string>|null Returns a hash of arguments, or null.
      */
-    public function getArguments(): ?array {
+    public function getArguments(): ?array
+    {
         return $this->arguments;
     }
 }

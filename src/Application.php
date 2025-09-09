@@ -14,9 +14,11 @@ class Application implements RequestHandlerInterface
 
     public function __construct(
         private IHandlerLocator $handlerLocator
-    ) { }
+    ) {
+    }
 
-    private function getHandlerLocator(): IHandlerLocator {
+    private function getHandlerLocator(): IHandlerLocator
+    {
         return $this->handlerLocator;
     }
 
@@ -25,9 +27,10 @@ class Application implements RequestHandlerInterface
      *
      * May call other collaborating code to generate the response.
      */
-    public function handle(ServerRequestInterface $request): ResponseInterface {
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
         $verb = Verb::tryFrom(strtoupper($request->getMethod()));
-    
+
         if ($verb === null) {
             // TODO Not a valid request method.
             // At this point I haven't decided if this is a 404 or something else

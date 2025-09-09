@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file contains Tests\BHR\Router\Routes\TokenizedRouteTest
  *
@@ -8,7 +9,7 @@
  * software and associated documentation files (the “Software”), to deal in the
  * Software without restriction, including without limitation the rights to use, copy,
  * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so, subject to the 
+ * and to permit persons to whom the Software is furnished to do so, subject to the
  * following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
@@ -33,23 +34,28 @@ namespace Tests\BHR\Router\Routes;
 use BHR\Router\Routes\TokenizedRoute;
 use PHPUnit\Framework\TestCase;
 
-class TokenizedRouteTest extends TestCase {
-    public function testClassExists(): void {
+class TokenizedRouteTest extends TestCase
+{
+    public function testClassExists(): void
+    {
         $this->assertTrue(class_exists(TokenizedRoute::class));
     }
 
-    public function testMatchesFailedIfDifferentNumberOfTokens(): void {
+    public function testMatchesFailedIfDifferentNumberOfTokens(): void
+    {
         $route = TokenizedRoute::fromPath('user/{userId}');
         $path = 'user/profile/12';
         $this->assertFalse($route->matches($path));
     }
 
-    public function testReturnsTrueForExactMatch(): void {
+    public function testReturnsTrueForExactMatch(): void
+    {
         $route = TokenizedRoute::fromPath('user/profile');
         $this->assertTrue($route->matches('user/profile'));
     }
 
-    public function testReturnsTrueForArgumentMatch(): void {
+    public function testReturnsTrueForArgumentMatch(): void
+    {
         $route = TokenizedRoute::fromPath('user/{id}');
         $this->assertTrue($route->matches('user/12'));
         $this->assertEquals('12', $route->getArguments()['id']);

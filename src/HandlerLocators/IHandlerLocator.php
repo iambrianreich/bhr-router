@@ -7,6 +7,7 @@ namespace BHR\Router\HandlerLocators;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-interface IHandlerLocator {
+interface IHandlerLocator
+{
     public function locate(RequestInterface $request): RequestHandlerInterface;
 }

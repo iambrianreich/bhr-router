@@ -10,8 +10,10 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionClass;
 
-class IHandlerLocatorTest extends TestCase {
-    public function testInterface(): void {
+class IHandlerLocatorTest extends TestCase
+{
+    public function testInterface(): void
+    {
         $this->assertTrue(interface_exists(IHandlerLocator::class));
 
         $handlerLocatorInterfaceReflector = new ReflectionClass(IHandlerLocator::class);
@@ -26,7 +28,7 @@ class IHandlerLocatorTest extends TestCase {
         $locateParametersReflector = $locateMethodReflector->getParameters();
         $this->assertEquals('request', $locateParametersReflector[0]->getName());
         $this->assertEquals(RequestInterface::class, $locateParametersReflector[0]->getType());
-        
+
         // Returns ResponseHandlerInterface
         $this->assertEquals(RequestHandlerInterface::class, $locateMethodReflector->getReturnType());
     }
