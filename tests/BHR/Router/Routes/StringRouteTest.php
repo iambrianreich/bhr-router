@@ -1,0 +1,53 @@
+<?php
+/**
+ * This file contains Tests\BHR\Router\Routes\StringRouteTest
+ *
+ * Copyright $YEAR$$ Brian Reich
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the “Software”), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the 
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * @author Brian Reich <brian@brianreich.dev>
+ * @copyright Copyright (C) $YEAR$$ Brian Reich
+ * @license MIT
+ */
+
+declare(strict_types=1);
+
+namespace Tests\BHR\Router\Routes;
+
+use BHR\Router\Routes\StringRoute;
+use PHPUnit\Framework\TestCase;
+
+class StringRouteTest extends TestCase {
+    public function testClassExists(): void {
+        $this->assertTrue(class_exists(StringRoute::class));
+    }
+
+    public function testMatchesReturnsTrueWhenStringsAreEqual(): void {
+        $path = '/users/12';
+        $route = new StringRoute($path);
+        $this->assertTrue($route->matches($path));
+    }
+
+    public function testMatchesReturnsFalseWhenStringsAreNotEqual(): void {
+        $routePath = '/users/me';
+        $route = new StringRoute($routePath);
+        $requestPath = '/users/somebodyelse';
+        $this->assertFalse($route->matches($requestPath));
+    }
+}
