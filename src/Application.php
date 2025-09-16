@@ -1,23 +1,73 @@
 <?php
+/**
+ * This file contains BHR\Router\Application
+ *
+ * Copyright $YEAR$$ Brian Reich
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the “Software”), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the 
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * @author Brian Reich <brian@brianreich.dev>
+ * @copyright Copyright (C) $YEAR$$ Brian Reich
+ * @license MIT
+ */
 
-namespace BHR;
+declare(strict_types=1);
 
+namespace BHR\Router;
+
+use BHR\Router\HandlerLocators\DefaultHandlerLocator;
 use BHR\Router\HandlerLocators\IHandlerLocator;
 use BHR\Router\HTTP\Verb;
+use BHR\Router\Routes\TokenizedRoute;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use WeakMap;
 
+/**
+ * Application is the application front controller.
+ *
+ * The Application defines routes and makes routes to handlers.
+ */
 class Application implements RequestHandlerInterface
 {
-    protected array $routes = [];
+    /**
+     * List of handlers. Indexs are Verbs, values are arrays with
+     * IRoute as index and callable handler as value.
+     *
+     * @var array<Verb, array<IRoute, callable>>
+     */
+    protected WeakMap $routes;
 
+    /**
+     * Creates a new Application.
+     *
+     * The constructor allows the caller to specify an IHandlerLocator, which
+     * is a component responsible for mapping routes to handlers. If one is
+     * not specified, the DefaultHandlerLocator is used.
+     */
     public function __construct(
-        private IHandlerLocator $handlerLocator
+        private IHandlerLocator $handlerLocator = new DefaultHandlerLocator()
     ) {
+        $this->routes = new WeakMap();
     }
 
-    private function getHandlerLocator(): IHandlerLocator
+    public function getHandlerLocator(): IHandlerLocator
     {
         return $this->handlerLocator;
     }
@@ -29,16 +79,6 @@ class Application implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $verb = Verb::tryFrom(strtoupper($request->getMethod()));
-
-        if ($verb === null) {
-            // TODO Not a valid request method.
-            // At this point I haven't decided if this is a 404 or something else
-            // because I need to look at the HTTP spec and decide what the right
-            // thing to do is, in the face of a nonstandard method.
-        }
-
-        // TODO What happens when not found?
         return $this->getHandlerLocator()->locate($request)->handle($request);
     }
 
@@ -67,14 +107,17 @@ class Application implements RequestHandlerInterface
         return $this->addRoute(Verb::DELETE, $route, $handler);
     }
 
-
-    private function addRoute(Verb $verb, string $route, callable $handler): self
+    public function addRoute(Verb $verb, string|IRoute $route, callable $handler): self
     {
-        if (! isset($this->routes[$verb])) {
-            $this->routes[$verb] = [];
+        $routeObject = $route;
+
+        // If the route is specified as a string, automatically convert it to
+        // a tokenized route.
+        if (is_string($route)) {
+            $routeObject = TokenizedRoute::fromPath($route);
         }
 
-        $this->routes[$verb][$route] = $handler;
+        $this->getHandlerLocator()->addRoute($verb, $routeObject, $handler);
         return $this;
     }
 }

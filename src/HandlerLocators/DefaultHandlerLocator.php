@@ -49,7 +49,7 @@ class DefaultHandlerLocator implements IHandlerLocator
     {
     }
 
-    public function addRoute(Verb $verb, IRoute $route, RequestHandlerInterface $handler): self
+    public function addRoute(Verb $verb, IRoute $route, callable $handler): self
     {
         if (! isset($this->routes[$verb])) {
             $this->routes[$verb] = [];

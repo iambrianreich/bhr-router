@@ -31,6 +31,8 @@ declare(strict_types=1);
 
 namespace BHR\Router\HandlerLocators;
 
+use BHR\Router\HTTP\Verb;
+use BHR\Router\IRoute;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
@@ -47,4 +49,14 @@ interface IHandlerLocator
      *
      */
     public function locate(RequestInterface $request): RequestHandlerInterface;
+
+    /**
+     * Adds a route that can be located by this IHandlerLocator.
+     *
+     * @param Verb $verb The HTTP verb of the request.
+     * @param IRoute $route The route to match.
+     * @param callable $handler The function to invoke to handle the request.
+     * @return self
+     */
+    public function addRoute(Verb $verb, IRoute $route, callable $handler): self;    
 }
