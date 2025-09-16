@@ -37,16 +37,18 @@ use Exception;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use WeakMap;
 
 class DefaultHandlerLocator implements IHandlerLocator
 {
     /**
      * @var array<Verb, array<IRoute, IRequestHandlerInterface>>
      */
-    protected array $routes = [];
+    protected WeakMap $routes;
 
     public function __construct()
     {
+        $this->routes = new WeakMap();
     }
 
     public function addRoute(Verb $verb, IRoute $route, callable $handler): self
