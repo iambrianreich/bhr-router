@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file contains Tests\BHR\Router\Exceptions\RouteHandlerNotFoundExceptionTest
+ * This file contains BHR\Router\RequestHandlers\CallableRequestHandler.
  *
  * Copyright $YEAR$$ Brian Reich
  *
@@ -29,32 +29,40 @@
 
 declare(strict_types=1);
 
-namespace Tests\BHR\Router\Exceptions;
+namespace BHR\Router\RequestHandlers;
 
-use BHR\Router\Exceptions\RouteHandlerNotFoundException;
-use BHR\Router\IRoute;
-use Exception;
-use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
-class RouteHandlerNotFoundExceptionTest extends TestCase
+class CallableRequestHandler implements RequestHandlerInterface
 {
-    public function testClassExists(): void
+    /**
+     * The callable to be invoked when handling a request.
+     *
+     * @todo if PHP ever supports setting callable as the explicit type for a property, do that.
+     * @var callable
+     */
+    protected $callable;
+
+    /**
+     * Creates a new CallableRequestHandler instance.
+     *
+     * @param callable $callable The callable to be invoked when handling a request.
+     */
+    public function __construct(callable $callable)
     {
-        $this->assertTrue(class_exists(RouteHandlerNotFoundException::class));
+        $this->callable = $callable;
     }
 
-    public function testConstructor(): void
+    /**
+     * Handles a request and produces a response by invoking the stored callable.
+     *
+     * @param ServerRequestInterface $request The server request to handle.
+     * @return ResponseInterface The response produced by the callable.
+     */
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $message = 'hello';
-        $code = 12;
-        $previous = new Exception('route not found');
-        $request = $this->createMock(ServerRequestInterface::class);
-
-        $exception = new RouteHandlerNotFoundException($request,$message, $code, $previous);
-        $this->assertEquals($message, $exception->getMessage());
-        $this->assertEquals($code, $exception->getCode());
-        $this->assertEquals($previous, $exception->getPrevious());
-        $this->assertEquals($request, $exception->getRequest());
+        return call_user_func($this->callable, $request);
     }
 }

@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace BHR\Router\Exceptions;
 
 use Exception;
+use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 
 /**
@@ -40,21 +41,21 @@ use Throwable;
 class RouteHandlerNotFoundException extends Exception
 {
     public function __construct(
+        protected ServerRequestInterface $request,
         string $message = '',
         int $code = 0,
-        ?Throwable $previous = null,
-        protected ?string $path = null
+        ?Throwable $previous = null
     ) {
         parent::__construct($message, $code, $previous);
     }
 
     /**
-     * Returns the path that did not have a matching handler.
+     * Returns the request that did not have a matching handler.
      *
-     * @return string|null $path The path that was missing a handler.
+     * @return ServerRequestInterface The request that did not have a matching handler.
      */
-    public function getPath(): ?string
+    public function getRequest(): ServerRequestInterface
     {
-        return $this->path;
+        return $this->request;
     }
 }

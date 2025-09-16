@@ -31,56 +31,108 @@ declare(strict_types=1);
 
 namespace BHR\Router\HandlerLocators;
 
+use BHR\Router\Exceptions\RouteHandlerNotFoundException;
 use BHR\Router\HTTP\Verb;
 use BHR\Router\IRoute;
+use BHR\Router\RequestHandlers\CallableRequestHandler;
 use Exception;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use WeakMap;
 
+/**
+ * Maps requests to the route the and handler that should process them.
+ *
+ * The DefaultHandlerLocator is a simple implementation of IHandlerLocator that
+ * uses a WeakMap to store routes and their associated handlers. It matches
+ * incoming requests to routes based on the HTTP verb and path. It then iterates
+ * through the routes for the given verb and checks if any of them match the
+ * request path. If a match is found, it returns the associated handler. If no
+ * match is found, it throws an exception.
+ */
 class DefaultHandlerLocator implements IHandlerLocator
 {
+    public const ERROR_BAD_VERB = 'Unrecognized HTTP verb: %s';
+    public const ERROR_HANDLER_NOT_FOUND = 'Handler not found for %s';
+
     /**
-     * @var array<Verb, array<IRoute, IRequestHandlerInterface>>
+     * Stores the routes and their associated handlers. This structure is a
+     * multi-layer WeakMap where the first layer is keyed by HTTP verb with the
+     * value being a second WeakMap whose keys are IRoute instances and whose
+     * values are the associated request handlers.
+     * @var WeakMap<Verb, WeakMap<IRoute, RequestHandlerInterface>>
      */
     protected WeakMap $routes;
 
+    /**
+     * Creates a new DefaultHandlerLocator instance with no registered routes.
+     */
     public function __construct()
     {
         $this->routes = new WeakMap();
     }
 
-    public function addRoute(Verb $verb, IRoute $route, callable $handler): self
+    /**
+     * Registers a route and its associated handler for a specific HTTP verb.
+     *
+     * @param Verb $verb The HTTP verb for which the route is registered.
+     * @param IRoute $route The route to be registered.
+     * @param callable|RequestHandlerInterface $handler The handler to be invoked when the route is matched.
+     */
+    public function addRoute(Verb $verb, IRoute $route, callable|RequestHandlerInterface $handler): self
     {
         if (! isset($this->routes[$verb])) {
-            $this->routes[$verb] = [];
+            $this->routes[$verb] = new WeakMap();
         }
 
-        $this->routes[$verb][] = [$route, $handler];
+        // If the caller has provided a naked function or callable, wrap it in
+        // a CallableRequestHandler instance.
+        if (is_callable($handler)) {
+            $handler = new CallableRequestHandler($handler);
+        }
+
+        $this->routes[$verb][$route] = $handler;
         return $this;
     }
 
+    /**
+     * Locates the appropriate handler for the given request and returns it.
+     */
     public function locate(RequestInterface $request): RequestHandlerInterface
     {
         $verb = Verb::tryFrom($request->getMethod());
 
         // If request method is not a verb we recognize, then there is no match.
         if ($verb === null) {
-            throw new InvalidArgumentException('Invalid HTTP verb ' . $request->getMethod());
+            throw new InvalidArgumentException(sprintf(
+                self::ERROR_BAD_VERB,
+                $request->getMethod()
+            ));
         }
 
         $path = $request->getUri()->getPath();
 
-        foreach ($this->routes[$verb] as $routeDefinition) {
-            $route = $routeDefinition[0];
-            $handler = $routeDefinition[1];
+        // If the verb has no registered routes, then there is no match.
+        if (! isset($this->routes[$verb])) {
+            throw new RouteHandlerNotFoundException(
+                $request,
+                sprintf(self::ERROR_HANDLER_NOT_FOUND, $path)
+            );
+        }
 
+        // Iterate through the routes for the given verb and check if any of
+        // them match the request path. If a match is found, return the associated
+        // handler. If no match is found, throw an exception.
+        foreach ($this->routes[$verb] as $route => $handler) {
             if ($route->matches($path)) {
                 return $handler;
             }
         }
 
-        throw new Exception('Handler not found for ' . $path);
+        throw new RouteHandlerNotFoundException(
+            $request,
+            sprintf(self::ERROR_HANDLER_NOT_FOUND, $path)
+        );
     }
 }
