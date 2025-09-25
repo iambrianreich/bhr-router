@@ -32,8 +32,10 @@ declare(strict_types=1);
 namespace Tests\BHR\Router\Exceptions;
 
 use BHR\Router\Exceptions\RouteHandlerNotFoundException;
+use BHR\Router\IRoute;
 use Exception;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ServerRequestInterface;
 
 class RouteHandlerNotFoundExceptionTest extends TestCase
 {
@@ -47,12 +49,12 @@ class RouteHandlerNotFoundExceptionTest extends TestCase
         $message = 'hello';
         $code = 12;
         $previous = new Exception('route not found');
-        $path = '/user/profile';
+        $request = $this->createMock(ServerRequestInterface::class);
 
-        $exception = new RouteHandlerNotFoundException($message, $code, $previous, $path);
+        $exception = new RouteHandlerNotFoundException($request,$message, $code, $previous);
         $this->assertEquals($message, $exception->getMessage());
         $this->assertEquals($code, $exception->getCode());
         $this->assertEquals($previous, $exception->getPrevious());
-        $this->assertEquals($path, $exception->getPath());
+        $this->assertEquals($request, $exception->getRequest());
     }
 }
