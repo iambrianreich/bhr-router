@@ -58,5 +58,5 @@ interface IHandlerLocator
      * @param callable $handler The function to invoke to handle the request.
      * @return self
      */
-    public function addRoute(Verb $verb, IRoute $route, callable $handler): self;    
+    public function addRoute(Verb $verb, IRoute $route, callable $handler): self;
 }
