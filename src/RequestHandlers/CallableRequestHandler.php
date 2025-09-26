@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file contains BHR\Router\RequestHandlers\CallableRequestHandler.
  *
@@ -8,7 +9,7 @@
  * software and associated documentation files (the “Software”), to deal in the
  * Software without restriction, including without limitation the rights to use, copy,
  * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so, subject to the 
+ * and to permit persons to whom the Software is furnished to do so, subject to the
  * following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
@@ -41,15 +42,16 @@ use Psr\Http\Server\RequestHandlerInterface;
  *
  * The CallableRequestHandler class is a wrapper that allows PHP callables
  * to easily function as request handlers.
- * 
+ *
  * Example:
- * 
+ *
  * $router->get(
  *     '/user',
  *     fn (ServerRequestInterface $request) => $model->getUsers($request->getParameter('id')
  * );
  */
-class CallableRequestHandler implements RequestHandlerInterface {
+class CallableRequestHandler implements RequestHandlerInterface
+{
     /**
      * The Closure wrapping the handler function.
      */
@@ -70,7 +72,8 @@ class CallableRequestHandler implements RequestHandlerInterface {
      *
      * @inheritdoc
      */
-    public function handle(ServerRequestInterface $request): ResponseInterface {
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
         return ($this->handlerFunction)($request);
     }
 }
