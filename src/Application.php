@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file contains BHR\Router\Application
  *
@@ -8,7 +9,7 @@
  * software and associated documentation files (the “Software”), to deal in the
  * Software without restriction, including without limitation the rights to use, copy,
  * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so, subject to the 
+ * and to permit persons to whom the Software is furnished to do so, subject to the
  * following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
@@ -99,13 +100,15 @@ class Application implements RequestHandlerInterface
         for ($index = count($this->middlewares) - 1; $index >= 0; $index--) {
             $middleware = $this->middlewares[$index];
             $nextHandler = $handler;
-            $handler = new class($middleware, $nextHandler) implements RequestHandlerInterface {
+            $handler = new class ($middleware, $nextHandler) implements RequestHandlerInterface {
                 public function __construct(
                     private MiddlewareInterface $middleware,
                     private RequestHandlerInterface $handler
-                ) {}
+                ) {
+                }
 
-                public function handle(ServerRequestInterface $request): ResponseInterface {
+                public function handle(ServerRequestInterface $request): ResponseInterface
+                {
                     return $this->middleware->process($request, $this->handler);
                 }
             };
@@ -148,12 +151,13 @@ class Application implements RequestHandlerInterface
         if (is_string($route)) {
             $routeObject = TokenizedRoute::fromPath($route);
         }
-        
+
         $this->getHandlerLocator()->addRoute($verb, $routeObject, $handler);
         return $this;
     }
 
-    public function add(MiddlewareInterface $middleware): self {
+    public function add(MiddlewareInterface $middleware): self
+    {
         $this->middlewares[] = $middleware;
         return $this;
     }
