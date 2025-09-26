@@ -4,4 +4,9 @@
 # Cruft created by build tools
 .php-cs-fixer.cache
 
+# AI stuff
+/.claude/settings.local.json
 
+# My "scratch" directory where I spin up experiments that don't need to be
+# part of the code in the repository.
+/scratch
