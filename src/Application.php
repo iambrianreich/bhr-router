@@ -36,6 +36,7 @@ use BHR\Router\HTTP\Verb;
 use BHR\Router\Routes\TokenizedRoute;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use WeakMap;
 
@@ -53,6 +54,13 @@ class Application implements RequestHandlerInterface
      * @var array<Verb, array<IRoute, callable>>
      */
     protected WeakMap $routes;
+
+    /**
+     * Collection of added middlewares.
+     *
+     * @var MiddlewareInterface[]
+     */
+    protected array $middlewares = [];
 
     /**
      * Creates a new Application.
@@ -79,7 +87,31 @@ class Application implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        return $this->getHandlerLocator()->locate($request)->handle($request);
+        $requestHandler = $this->getHandlerLocator()->locate($request);
+
+        // If there are no middlewares, then just handle the request.
+        if (empty($this->middlewares)) {
+            return $requestHandler->handle($request);
+        }
+
+        // Build the middleware chain by wrapping handlers from the inside out
+        $handler = $requestHandler;
+        for ($index = count($this->middlewares) - 1; $index >= 0; $index--) {
+            $middleware = $this->middlewares[$index];
+            $nextHandler = $handler;
+            $handler = new class($middleware, $nextHandler) implements RequestHandlerInterface {
+                public function __construct(
+                    private MiddlewareInterface $middleware,
+                    private RequestHandlerInterface $handler
+                ) {}
+
+                public function handle(ServerRequestInterface $request): ResponseInterface {
+                    return $this->middleware->process($request, $this->handler);
+                }
+            };
+        }
+
+        return $handler->handle($request);
     }
 
     public function get(string $route, callable $handler): self
@@ -116,8 +148,13 @@ class Application implements RequestHandlerInterface
         if (is_string($route)) {
             $routeObject = TokenizedRoute::fromPath($route);
         }
-
+        
         $this->getHandlerLocator()->addRoute($verb, $routeObject, $handler);
+        return $this;
+    }
+
+    public function add(MiddlewareInterface $middleware): self {
+        $this->middlewares[] = $middleware;
         return $this;
     }
 }

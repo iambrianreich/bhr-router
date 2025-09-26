@@ -59,9 +59,10 @@ class DefaultHandlerLocator implements IHandlerLocator
     /**
      * Stores the routes and their associated handlers. This structure is a
      * multi-layer WeakMap where the first layer is keyed by HTTP verb with the
-     * value being a second WeakMap whose keys are IRoute instances and whose
-     * values are the associated request handlers.
-     * @var WeakMap<Verb, WeakMap<IRoute, RequestHandlerInterface>>
+     * value being an array of route-handler pairs. We use an array instead of
+     * WeakMap for the inner structure to prevent route objects from being
+     * garbage collected.
+     * @var WeakMap<Verb, array<array{route: IRoute, handler: RequestHandlerInterface}>>
      */
     protected WeakMap $routes;
 
@@ -83,7 +84,7 @@ class DefaultHandlerLocator implements IHandlerLocator
     public function addRoute(Verb $verb, IRoute $route, callable|RequestHandlerInterface $handler): self
     {
         if (! isset($this->routes[$verb])) {
-            $this->routes[$verb] = new WeakMap();
+            $this->routes[$verb] = [];
         }
 
         // If the caller has provided a naked function or callable, wrap it in
@@ -92,7 +93,7 @@ class DefaultHandlerLocator implements IHandlerLocator
             $handler = new CallableRequestHandler($handler);
         }
 
-        $this->routes[$verb][$route] = $handler;
+        $this->routes[$verb][] = ['route' => $route, 'handler' => $handler];
         return $this;
     }
 
@@ -124,9 +125,9 @@ class DefaultHandlerLocator implements IHandlerLocator
         // Iterate through the routes for the given verb and check if any of
         // them match the request path. If a match is found, return the associated
         // handler. If no match is found, throw an exception.
-        foreach ($this->routes[$verb] as $route => $handler) {
-            if ($route->matches($path)) {
-                return $handler;
+        foreach ($this->routes[$verb] as $routeData) {
+            if ($routeData['route']->matches($path)) {
+                return $routeData['handler'];
             }
         }
 
