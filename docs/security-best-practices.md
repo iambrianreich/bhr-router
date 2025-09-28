@@ -280,14 +280,212 @@ $app->get('/api/v1/files/{userId}/{filename}', function($request) {
 });
 ```
 
+## Error Handling and Information Disclosure
+
+### Router Exception Philosophy
+
+The BHR Router intentionally provides **detailed, informative exceptions** when routes cannot be matched or other errors occur. This is a deliberate architectural decision that follows industry standards.
+
+### Why Detailed Exceptions Are Correct
+
+```php
+// Router throws detailed exceptions
+throw new RouteHandlerNotFoundException($request, "Handler not found for /admin/users/{id}");
+
+// This is GOOD because:
+// 1. Developers can debug route matching issues
+// 2. Logs contain useful troubleshooting information
+// 3. Tests can verify specific error conditions
+// 4. Applications can decide what to expose publicly
+```
+
+### Industry Standard Approach
+
+Major routing libraries follow the same pattern:
+
+- **Symfony Router**: Throws `ResourceNotFoundException` with full route details
+- **Laravel Router**: Throws `NotFoundHttpException` with specific route information
+- **Express.js**: Provides detailed errors to error middleware for filtering
+- **FastRoute**: Returns specific "method not allowed" vs "not found" information
+
+### Secure Error Handling in Applications
+
+The **application layer** should decide what error information to expose:
+
+#### Development Environment
+
+```php
+class ErrorHandler {
+    public function handle(Exception $e): ResponseInterface {
+        if ($e instanceof RouteHandlerNotFoundException) {
+            // Show detailed error for debugging
+            return new JsonResponse([
+                'error' => 'Route Not Found',
+                'details' => $e->getMessage(),
+                'path' => $e->getRequest()->getUri()->getPath(),
+                'method' => $e->getRequest()->getMethod(),
+                'debug' => true
+            ], 404);
+        }
+    }
+}
+```
+
+#### Production Environment
+
+```php
+class ErrorHandler {
+    public function handle(Exception $e): ResponseInterface {
+        if ($e instanceof RouteHandlerNotFoundException) {
+            // Log detailed error for ops team
+            $this->logger->warning('Route not found', [
+                'path' => $e->getRequest()->getUri()->getPath(),
+                'method' => $e->getRequest()->getMethod(),
+                'user_agent' => $e->getRequest()->getHeaderLine('User-Agent')
+            ]);
+
+            // Return generic error to user
+            return new JsonResponse([
+                'error' => 'Not Found',
+                'message' => 'The requested resource was not found'
+            ], 404);
+        }
+    }
+}
+```
+
+#### Conditional Error Handling
+
+```php
+class EnvironmentAwareErrorHandler {
+    public function __construct(
+        private bool $isDebug,
+        private LoggerInterface $logger
+    ) {}
+
+    public function handle(Exception $e): ResponseInterface {
+        if ($e instanceof RouteHandlerNotFoundException) {
+            // Always log for debugging/monitoring
+            $this->logger->info('Route not found', [
+                'path' => $e->getRequest()->getUri()->getPath(),
+                'method' => $e->getRequest()->getMethod()
+            ]);
+
+            if ($this->isDebug) {
+                // Development: show details
+                return new JsonResponse([
+                    'error' => $e->getMessage(),
+                    'path' => $e->getRequest()->getUri()->getPath(),
+                    'trace' => $e->getTraceAsString()
+                ], 404);
+            } else {
+                // Production: generic message
+                return new JsonResponse(['error' => 'Not Found'], 404);
+            }
+        }
+    }
+}
+```
+
+### Security Considerations for Error Handling
+
+#### What Information Is Safe to Expose
+
+**Generally Safe** (even in production):
+- Generic error types ("Not Found", "Method Not Allowed")
+- HTTP status codes
+- General error categories
+
+**Context-Dependent** (varies by application):
+- Route paths (might be public knowledge)
+- Parameter names (might be in documentation)
+- HTTP methods tried
+
+**Usually Sensitive** (avoid in production):
+- Internal server paths
+- Database connection details
+- Full stack traces
+- User session information
+- Internal IP addresses
+
+#### Error Logging Best Practices
+
+```php
+// Good: Structured logging with context
+$this->logger->warning('Route not found', [
+    'path' => $request->getUri()->getPath(),
+    'method' => $request->getMethod(),
+    'ip' => $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown',
+    'user_agent' => $request->getHeaderLine('User-Agent'),
+    'referer' => $request->getHeaderLine('Referer')
+]);
+
+// Avoid: Logging sensitive headers or request body
+$this->logger->info('Request failed', [
+    'full_request' => (string) $request, // Contains headers, body, auth tokens!
+]);
+```
+
+### Configuration Example
+
+```php
+// Application configuration
+class RouterConfig {
+    public function createErrorHandler(): ErrorHandlerInterface {
+        return new ErrorHandler(
+            isDebug: $_ENV['APP_DEBUG'] ?? false,
+            logger: $this->getLogger(),
+            shouldExposeDetails: $_ENV['EXPOSE_ROUTE_ERRORS'] ?? false
+        );
+    }
+}
+
+// Usage in application
+$app = new Application($handlerLocator);
+
+try {
+    $response = $app->handle($request);
+} catch (RouteHandlerNotFoundException $e) {
+    $response = $errorHandler->handle($e);
+} catch (Exception $e) {
+    $response = $errorHandler->handleGeneric($e);
+}
+```
+
+### Testing Error Conditions
+
+```php
+public function testRouteNotFoundProvidesDetailedError(): void {
+    $app = new Application();
+    $request = new ServerRequest('GET', '/nonexistent');
+
+    $this->expectException(RouteHandlerNotFoundException::class);
+    $this->expectExceptionMessage('Handler not found for /nonexistent');
+
+    $app->handle($request);
+}
+
+public function testErrorHandlerSanitizesProductionErrors(): void {
+    $errorHandler = new ErrorHandler(isDebug: false);
+    $exception = new RouteHandlerNotFoundException($request, 'Handler not found for /admin/secret');
+
+    $response = $errorHandler->handle($exception);
+    $body = json_decode($response->getBody()->getContents(), true);
+
+    $this->assertEquals('Not Found', $body['error']);
+    $this->assertArrayNotHasKey('details', $body);
+}
+```
+
 ## Summary
 
-The BHR Router follows the principle of separation of concerns. It extracts parameters but doesn't validate their contents because:
+The BHR Router follows the principle of separation of concerns. It extracts parameters but doesn't validate their contents, and it provides detailed exceptions but doesn't sanitize them because:
 
-1. **It can't know** how parameters will be used
-2. **It shouldn't assume** what validation is needed
-3. **It would limit flexibility** if it enforced validation rules
+1. **It can't know** how parameters will be used or what information is sensitive
+2. **It shouldn't assume** what validation or sanitization is needed
+3. **It would limit flexibility** if it enforced security policies
+4. **Industry standards** demonstrate this is the correct approach
 
-Security validation is the responsibility of route handlers and middleware, where the context and requirements are known. This design provides maximum flexibility while maintaining security when properly implemented at the application level.
+Security validation and error sanitization are the responsibility of route handlers and error handling middleware, where the context, environment, and security requirements are known. This design provides maximum flexibility while maintaining security when properly implemented at the application level.
 
-Remember: **The router extracts, the handler validates.**
+Remember: **The router extracts and reports, the application layer secures and sanitizes.**
