@@ -26,6 +26,17 @@ class TokenizedRoute implements IParameterizedRoute
 {
     public const PATH_SEPARATOR = '/';
     public const ERROR_INVALID_TOKEN = '"%" is an invalid url token';
+    public const ERROR_INVALID_PATH = 'Invalid route path: %s';
+    public const ERROR_EMPTY_PARAMETER = 'Empty parameter names are not allowed';
+    public const ERROR_INVALID_PARAMETER_NAME = 'Invalid parameter name "%s": must contain only letters, numbers, and underscores, and start with a letter or underscore';
+    public const ERROR_DUPLICATE_PARAMETER = 'Duplicate parameter name "%s" in route path';
+    public const ERROR_PATH_TOO_LONG = 'Route path exceeds maximum length of %d characters';
+    public const ERROR_TOO_MANY_SEGMENTS = 'Route path exceeds maximum of %d segments';
+    public const ERROR_SEGMENT_TOO_LONG = 'Route segment "%s" exceeds maximum length of %d characters';
+
+    public const MAX_PATH_LENGTH = 2048;
+    public const MAX_SEGMENTS = 50;
+    public const MAX_SEGMENT_LENGTH = 255;
 
     /**
      * A hash of the named arguments and their values fmro the most recent
@@ -60,10 +71,60 @@ class TokenizedRoute implements IParameterizedRoute
      *
      * @param string $path The path to convert to a TokenizedRoute.
      * @return self
+     * @throws InvalidArgumentException if the path is invalid
      */
     public static function fromPath(string $path): self
     {
-        return new TokenizedRoute(explode(self::PATH_SEPARATOR, $path));
+        // Validate path length
+        if (strlen($path) > self::MAX_PATH_LENGTH) {
+            throw new InvalidArgumentException(sprintf(self::ERROR_PATH_TOO_LONG, self::MAX_PATH_LENGTH));
+        }
+
+        // Split path into tokens
+        $tokens = explode(self::PATH_SEPARATOR, $path);
+
+        // Validate number of segments
+        if (count($tokens) > self::MAX_SEGMENTS) {
+            throw new InvalidArgumentException(sprintf(self::ERROR_TOO_MANY_SEGMENTS, self::MAX_SEGMENTS));
+        }
+
+        // Validate each token
+        $parameterNames = [];
+        foreach ($tokens as $token) {
+            // Validate segment length
+            if (strlen($token) > self::MAX_SEGMENT_LENGTH) {
+                throw new InvalidArgumentException(sprintf(
+                    self::ERROR_SEGMENT_TOO_LONG,
+                    substr($token, 0, 50) . '...',
+                    self::MAX_SEGMENT_LENGTH
+                ));
+            }
+
+            // Check if this is a parameter token
+            $tokenLength = strlen($token);
+            if ($tokenLength >= 2 && $token[0] === '{' && $token[$tokenLength - 1] === '}') {
+                $paramName = substr($token, 1, -1);
+
+                // Validate parameter name is not empty
+                if ($paramName === '') {
+                    throw new InvalidArgumentException(self::ERROR_EMPTY_PARAMETER);
+                }
+
+                // Validate parameter name format (alphanumeric + underscore, must start with letter or underscore)
+                if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $paramName)) {
+                    throw new InvalidArgumentException(sprintf(self::ERROR_INVALID_PARAMETER_NAME, $paramName));
+                }
+
+                // Check for duplicate parameter names
+                if (in_array($paramName, $parameterNames, true)) {
+                    throw new InvalidArgumentException(sprintf(self::ERROR_DUPLICATE_PARAMETER, $paramName));
+                }
+
+                $parameterNames[] = $paramName;
+            }
+        }
+
+        return new TokenizedRoute($tokens);
     }
 
     /**
@@ -105,7 +166,7 @@ class TokenizedRoute implements IParameterizedRoute
 
                 // Reject empty parameter names
                 if ($paramName === '') {
-                    throw new InvalidArgumentException('Empty parameter names are not allowed');
+                    throw new InvalidArgumentException(self::ERROR_EMPTY_PARAMETER);
                 }
 
                 $arguments[$paramName] = $pathTokens[$index];
