@@ -96,9 +96,19 @@ class TokenizedRoute implements IParameterizedRoute
         }
 
         for ($index = 0; $index < count($pathTokens); $index++) {
-            $matches = [];
-            if (preg_match('/^{(.*)}$/', $this->tokens[$index], $matches)) {
-                $arguments[$matches[1]] = $pathTokens[$index];
+            $token = $this->tokens[$index];
+            $tokenLength = strlen($token);
+
+            // Check if this is a parameter token (wrapped in curly braces)
+            if ($tokenLength >= 2 && $token[0] === '{' && $token[$tokenLength - 1] === '}') {
+                $paramName = substr($token, 1, -1);
+
+                // Reject empty parameter names
+                if ($paramName === '') {
+                    throw new InvalidArgumentException('Empty parameter names are not allowed');
+                }
+
+                $arguments[$paramName] = $pathTokens[$index];
                 continue;
             }
 

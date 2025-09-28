@@ -4,7 +4,8 @@
       "Bash(cat:*)",
       "Bash(composer test:*)",
       "Bash(./vendor/bin/phpunit:*)",
-      "Bash(composer install:*)"
+      "Bash(composer install:*)",
+      "Bash(php:*)"
     ],
     "deny": [],
     "ask": []
