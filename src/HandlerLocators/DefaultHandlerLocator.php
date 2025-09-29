@@ -45,11 +45,11 @@ use WeakMap;
  * Maps requests to the route the and handler that should process them.
  *
  * The DefaultHandlerLocator is a simple implementation of IHandlerLocator that
- * uses a WeakMap to store routes and their associated handlers. It matches
- * incoming requests to routes based on the HTTP verb and path. It then iterates
- * through the routes for the given verb and checks if any of them match the
- * request path. If a match is found, it returns the associated handler. If no
- * match is found, it throws an exception.
+ * uses a hybrid WeakMap+array architecture for route storage. The outer layer
+ * uses WeakMap keyed by HTTP verb, while inner storage uses arrays to prevent
+ * route objects from being garbage collected. It matches incoming requests to
+ * routes based on the HTTP verb and path, iterating through registered routes
+ * until a match is found. If no match is found, it throws an exception.
  */
 class DefaultHandlerLocator implements IHandlerLocator
 {
@@ -57,11 +57,11 @@ class DefaultHandlerLocator implements IHandlerLocator
     public const ERROR_HANDLER_NOT_FOUND = 'Handler not found for %s';
 
     /**
-     * Stores the routes and their associated handlers. This structure is a
-     * multi-layer WeakMap where the first layer is keyed by HTTP verb with the
-     * value being an array of route-handler pairs. We use an array instead of
-     * WeakMap for the inner structure to prevent route objects from being
-     * garbage collected.
+     * Stores the routes and their associated handlers using a hybrid WeakMap+array
+     * architecture. The outer WeakMap is keyed by HTTP verb (Verb enum objects)
+     * with values being arrays of route-handler pairs. Arrays are used for inner
+     * storage instead of nested WeakMaps to prevent route objects from being
+     * prematurely garbage collected, which would cause "Handler not found" errors.
      * @var WeakMap<Verb, array<array{route: IRoute, handler: RequestHandlerInterface}>>
      */
     protected WeakMap $routes;
