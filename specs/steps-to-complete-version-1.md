@@ -11,14 +11,13 @@ This document contains a comprehensive list of improvements identified through m
 - [x] ~~Implement input validation for all route paths and parameters~~ - **COMPLETED**: Added comprehensive route structure validation including path length limits (2048 chars), segment limits (50 segments), segment length limits (255 chars), parameter name format validation, and duplicate parameter detection. Added 17 new tests covering all validation scenarios.
 - [x] ~~Sanitize error messages to prevent information disclosure~~ - **COMPLETED**: Determined this is the application layer's responsibility, not the router's. Router should provide detailed, informative exceptions for debugging and flexibility. Applications handle secure error display based on environment (dev vs prod). Updated security best practices documentation with proper error handling patterns following industry standards.
 - [x] ~~Add parameter name validation (alphanumeric + underscore only)~~ - **COMPLETED**: Implemented as part of input validation above. Parameter names must start with letter/underscore and contain only alphanumeric + underscore characters.
-- [ ] Implement URL encoding validation
 - [x] ~~Add route path length limits~~ - **COMPLETED**: Implemented as part of input validation above. Routes limited to 2048 characters total, 50 segments max, 255 characters per segment.
 
 ### Documentation Fixes
-- [ ] Fix typo in README.md line 27: "composer tyest" → "composer test"
-- [ ] Replace TODO placeholder in README.md with actual usage examples
-- [ ] Correct namespace documentation (shows BHR\Router\Application but actual is BHR\Application)
-- [ ] Add basic installation verification steps to README
+- [x] ~~Fix typo in README.md line 27: "composer tyest" → "composer test"~~ - **COMPLETED**
+- [x] ~~Replace TODO placeholder in README.md with actual usage examples~~ - **COMPLETED**: Added comprehensive usage examples including basic routing, middleware, and route parameters
+- [x] ~~Correct namespace documentation (shows BHR\Router\Application but actual is BHR\Application)~~ - **COMPLETED**: Verified the namespace is actually correct - it IS `BHR\Router\Application`, not `BHR\Application`
+- [x] ~~Add basic installation verification steps to README~~ - **COMPLETED**: Added verification section with test script
 
 ### Code Issues
 - [ ] Remove unused `WeakMap $routes` property from Application class
