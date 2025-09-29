@@ -3,7 +3,7 @@
 /**
  * This file contains BHR\Router\HandlerLocators\IHandlerLocator
  *
- * Copyright $YEAR$$ Brian Reich
+ * Copyright 2025 Brian Reich
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the “Software”), to deal in the
@@ -23,7 +23,7 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @author Brian Reich <brian@brianreich.dev>
- * @copyright Copyright (C) $YEAR$$ Brian Reich
+ * @copyright Copyright (C) 2025 Brian Reich
  * @license MIT
  */
 
