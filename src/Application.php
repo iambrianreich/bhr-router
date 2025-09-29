@@ -39,7 +39,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use WeakMap;
 
 /**
  * Application is the application front controller.
@@ -48,13 +47,6 @@ use WeakMap;
  */
 class Application implements RequestHandlerInterface
 {
-    /**
-     * List of handlers. Indexs are Verbs, values are arrays with
-     * IRoute as index and callable handler as value.
-     *
-     * @var array<Verb, array<IRoute, callable>>
-     */
-    protected WeakMap $routes;
 
     /**
      * Collection of added middlewares.
@@ -73,7 +65,6 @@ class Application implements RequestHandlerInterface
     public function __construct(
         private IHandlerLocator $handlerLocator = new DefaultHandlerLocator()
     ) {
-        $this->routes = new WeakMap();
     }
 
     public function getHandlerLocator(): IHandlerLocator
