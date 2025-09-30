@@ -10,6 +10,18 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+    <coverage includeUncoveredFiles="true">
+        <report>
+            <html outputDirectory="build/coverage"/>
+            <text outputFile="php://stdout"/>
+            <clover outputFile="build/logs/clover.xml"/>
+        </report>
+    </coverage>
     <php>
         <ini name="display_errors" value="1"/>
         <ini name="error_reporting" value="-1"/>
