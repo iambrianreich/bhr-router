@@ -3,6 +3,8 @@
 
 # Cruft created by build tools
 .php-cs-fixer.cache
+.phpunit.cache
+/build/
 
 # AI stuff
 .claude/settings.local.json

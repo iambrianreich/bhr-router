@@ -9,6 +9,11 @@
             "BHR\\Router\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\BHR\\": "tests/BHR/"
+        }
+    },
     "authors": [
         {
             "name": "Brian Reich"
