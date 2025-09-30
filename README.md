@@ -1,5 +1,10 @@
 # bhr/router
 
+[![CI](https://github.com/iambrianreich/bhr-router/workflows/CI/badge.svg)](https://github.com/iambrianreich/bhr-router/actions/workflows/ci.yml)
+[![Security](https://github.com/iambrianreich/bhr-router/workflows/Security/badge.svg)](https://github.com/iambrianreich/bhr-router/actions/workflows/security.yml)
+[![PHP 8.4+](https://img.shields.io/badge/PHP-8.4%2B-blue.svg)](https://www.php.net)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A simple PHP router for simple PHP projects
 
 ## Features
