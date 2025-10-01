@@ -37,6 +37,10 @@ use BHR\Router\HTTP\Verb;
 use BHR\Router\IRoute;
 use BHR\Router\Routes\TokenizedRoute;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 class ApplicationTest extends TestCase {
     public function testConstuctorWithNoArgumentsUsesDefaultHandlerLocator(): void {
@@ -167,6 +171,187 @@ class ApplicationTest extends TestCase {
         
         $application = new Application($locator);
         $application->delete($route, $callable);
+    }
+
+    /**
+     * Test middleware exception handling
+     */
+    public function testMiddlewareExceptionHandling(): void
+    {
+        $request = $this->createMock(ServerRequestInterface::class);
+        $response = $this->createMock(ResponseInterface::class);
+
+        // Create a handler that will be called
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler->expects($this->never())
+            ->method('handle');
+
+        // Create a middleware that throws an exception
+        $middleware = $this->createMock(MiddlewareInterface::class);
+        $middleware->expects($this->once())
+            ->method('process')
+            ->willThrowException(new \RuntimeException('Middleware error'));
+
+        // Setup locator to return the handler
+        $locator = $this->createMock(IHandlerLocator::class);
+        $locator->expects($this->once())
+            ->method('locate')
+            ->with($request)
+            ->willReturn($handler);
+
+        $application = new Application($locator);
+        $application->add($middleware);
+
+        // Exception should propagate
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Middleware error');
+        $application->handle($request);
+    }
+
+    /**
+     * Test multiple middleware execution order
+     */
+    public function testMultipleMiddlewareExecutionOrder(): void
+    {
+        $request = $this->createMock(ServerRequestInterface::class);
+        $response = $this->createMock(ResponseInterface::class);
+        $executionOrder = [];
+
+        // Create final handler
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler->expects($this->once())
+            ->method('handle')
+            ->willReturnCallback(function () use (&$executionOrder, $response) {
+                $executionOrder[] = 'handler';
+                return $response;
+            });
+
+        // Create first middleware
+        $middleware1 = $this->createMock(MiddlewareInterface::class);
+        $middleware1->expects($this->once())
+            ->method('process')
+            ->willReturnCallback(function ($req, $handler) use (&$executionOrder) {
+                $executionOrder[] = 'middleware1-before';
+                $response = $handler->handle($req);
+                $executionOrder[] = 'middleware1-after';
+                return $response;
+            });
+
+        // Create second middleware
+        $middleware2 = $this->createMock(MiddlewareInterface::class);
+        $middleware2->expects($this->once())
+            ->method('process')
+            ->willReturnCallback(function ($req, $handler) use (&$executionOrder) {
+                $executionOrder[] = 'middleware2-before';
+                $response = $handler->handle($req);
+                $executionOrder[] = 'middleware2-after';
+                return $response;
+            });
+
+        // Create third middleware
+        $middleware3 = $this->createMock(MiddlewareInterface::class);
+        $middleware3->expects($this->once())
+            ->method('process')
+            ->willReturnCallback(function ($req, $handler) use (&$executionOrder) {
+                $executionOrder[] = 'middleware3-before';
+                $response = $handler->handle($req);
+                $executionOrder[] = 'middleware3-after';
+                return $response;
+            });
+
+        // Setup locator
+        $locator = $this->createMock(IHandlerLocator::class);
+        $locator->expects($this->once())
+            ->method('locate')
+            ->willReturn($handler);
+
+        $application = new Application($locator);
+        $application->add($middleware1);
+        $application->add($middleware2);
+        $application->add($middleware3);
+
+        $result = $application->handle($request);
+
+        // Verify execution order (onion model)
+        $expectedOrder = [
+            'middleware1-before',
+            'middleware2-before',
+            'middleware3-before',
+            'handler',
+            'middleware3-after',
+            'middleware2-after',
+            'middleware1-after',
+        ];
+
+        $this->assertEquals($expectedOrder, $executionOrder);
+        $this->assertSame($response, $result);
+    }
+
+    /**
+     * Test middleware can short-circuit the chain
+     */
+    public function testMiddlewareCanShortCircuit(): void
+    {
+        $request = $this->createMock(ServerRequestInterface::class);
+        $shortCircuitResponse = $this->createMock(ResponseInterface::class);
+
+        // Handler should never be called
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler->expects($this->never())
+            ->method('handle');
+
+        // Middleware that short-circuits
+        $middleware = $this->createMock(MiddlewareInterface::class);
+        $middleware->expects($this->once())
+            ->method('process')
+            ->willReturn($shortCircuitResponse);
+
+        $locator = $this->createMock(IHandlerLocator::class);
+        $locator->expects($this->once())
+            ->method('locate')
+            ->willReturn($handler);
+
+        $application = new Application($locator);
+        $application->add($middleware);
+
+        $result = $application->handle($request);
+        $this->assertSame($shortCircuitResponse, $result);
+    }
+
+    /**
+     * Test middleware can modify request
+     */
+    public function testMiddlewareCanModifyRequest(): void
+    {
+        $originalRequest = $this->createMock(ServerRequestInterface::class);
+        $modifiedRequest = $this->createMock(ServerRequestInterface::class);
+        $response = $this->createMock(ResponseInterface::class);
+
+        // Handler should receive modified request
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler->expects($this->once())
+            ->method('handle')
+            ->with($modifiedRequest)
+            ->willReturn($response);
+
+        // Middleware that modifies request
+        $middleware = $this->createMock(MiddlewareInterface::class);
+        $middleware->expects($this->once())
+            ->method('process')
+            ->willReturnCallback(function ($req, $handler) use ($modifiedRequest) {
+                return $handler->handle($modifiedRequest);
+            });
+
+        $locator = $this->createMock(IHandlerLocator::class);
+        $locator->expects($this->once())
+            ->method('locate')
+            ->willReturn($handler);
+
+        $application = new Application($locator);
+        $application->add($middleware);
+
+        $result = $application->handle($originalRequest);
+        $this->assertSame($response, $result);
     }
 }
 

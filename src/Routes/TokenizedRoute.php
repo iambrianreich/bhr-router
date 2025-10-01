@@ -25,7 +25,7 @@ use InvalidArgumentException;
 class TokenizedRoute implements IParameterizedRoute
 {
     public const PATH_SEPARATOR = '/';
-    public const ERROR_INVALID_TOKEN = '"%" is an invalid url token';
+    public const ERROR_INVALID_TOKEN = '"%s" is an invalid url token';
     public const ERROR_INVALID_PATH = 'Invalid route path: %s';
     public const ERROR_EMPTY_PARAMETER = 'Empty parameter names are not allowed';
     public const ERROR_INVALID_PARAMETER_NAME = 'Invalid parameter name "%s": must contain only letters, numbers, and underscores, and start with a letter or underscore';
@@ -54,7 +54,7 @@ class TokenizedRoute implements IParameterizedRoute
     {
         foreach ($tokens as $token) {
             if (! is_string($token)) {
-                throw new InvalidArgumentException(sprintf(self::ERROR_INVALID_TOKEN, $token));
+                throw new InvalidArgumentException(sprintf(self::ERROR_INVALID_TOKEN, (string) $token));
             }
         }
 

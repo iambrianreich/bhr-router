@@ -33,14 +33,14 @@ This document contains a comprehensive list of improvements identified through m
 - [x] ~~Add PHPUnit bootstrap file if needed~~ - **NOT NEEDED**: Current setup with vendor/autoload.php is sufficient for this library
 
 ### Missing Test Cases
-- [ ] Add edge case tests for TokenizedRoute (malformed URLs, special characters)
-- [ ] Test invalid token formats: `{`, `}{}`, `{invalid-name}`
-- [ ] Add URL encoding/decoding test scenarios
-- [ ] Test empty path handling
-- [ ] Add middleware exception handling tests
-- [ ] Test multiple middleware execution order
-- [ ] Add route precedence tests
-- [ ] Test WeakMap/array behavior in DefaultHandlerLocator
+- [x] ~~Add edge case tests for TokenizedRoute (malformed URLs, special characters)~~ - **COMPLETED**: Added 11 new edge case tests including special characters, Unicode, URL encoding, trailing slashes
+- [x] ~~Test invalid token formats: `{`, `}{}`, `{invalid-name}`~~ - **COMPLETED**: Added tests for malformed tokens, empty braces, nested braces, unclosed braces
+- [x] ~~Add URL encoding/decoding test scenarios~~ - **COMPLETED**: Tests for %20, %26 and other URL encoded characters in parameters
+- [x] ~~Test empty path handling~~ - **COMPLETED**: Already had tests for empty and root paths, added consecutive slash tests
+- [x] ~~Add middleware exception handling tests~~ - **COMPLETED**: Added tests for middleware exceptions, short-circuit, and request modification
+- [x] ~~Test multiple middleware execution order~~ - **COMPLETED**: Comprehensive test verifying onion model execution (before/after wrapping)
+- [x] ~~Add route precedence tests~~ - **COMPLETED**: Tests for first-match-wins and specific route precedence patterns
+- [x] ~~Test WeakMap/array behavior in DefaultHandlerLocator~~ - **COMPLETED**: Tests for garbage collection prevention, multiple routes per verb, WeakMap with Verb enums
 - [ ] Add security validation tests (path traversal, injection)
 - [ ] Test HTTP method tampering scenarios
 
